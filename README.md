@@ -4,7 +4,7 @@
 1. AWS acount with 
 - a Lambda function
 - a DynamoDB database linked to the lambda
-2. Alexa skill in alexa developer account with the intents containing proper utterances and slots(refer [intents.json](https://github.com/BajajSmriti/volleyDiceGame/blob/master/intents.json) )
+2. Alexa skill in alexa developer account with the intents containing proper utterances and slots (refer [intents.json](https://github.com/BajajSmriti/volleyDiceGame/blob/master/intents.json) )
 3. Node.js
 4. TypeScript knowledge
 
