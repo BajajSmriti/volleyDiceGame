@@ -18,7 +18,8 @@ const HelpIntentHandler: Alexa.RequestHandler = {
   canHandle: isIntent("AMAZON.HelpIntent"),
   handle(handlerInput) {
     return handlerInput.responseBuilder
-      .speak("Try saying hello!")
+      .speak("Try saying, roll the dice!")
+      .withShouldEndSession(false)
       .getResponse();
   },
 };
@@ -123,7 +124,7 @@ const DontAddNameIntentHandler: Alexa.RequestHandler = {
 
     return handlerInput.responseBuilder
       .speak("Thanks for playing, have a wonderful day!")
-      .withShouldEndSession(false)
+      .withShouldEndSession(true)
       .getResponse();
   },
 };
@@ -149,7 +150,7 @@ const AddNameToHighScoreIntentHandler: Alexa.RequestHandler = {
       );
       sessionAttributes.score = 0;
       handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
-      speechOutput = `${sessionAttributes.userName}, your score of ${score} has been updated. Goodbye!`;
+      speechOutput = `${sessionAttributes.userName}, your score of ${score} has been updated.`;
     } else {
       // Get the user name from the slots
       const userName =
@@ -169,13 +170,14 @@ const AddNameToHighScoreIntentHandler: Alexa.RequestHandler = {
         sessionAttributes.userName = userName;
         sessionAttributes.score = 0;
         handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
-        speechOutput = `${userName}, your score of ${score} has been added to the high score list. Goodbye!`;
+        speechOutput = `${userName}, your score of ${score} has been added to the high score list.`;
       }
     }
 
     return handlerInput.responseBuilder
       .speak(speechOutput)
       .withShouldEndSession(false)
+      .reprompt("Want to play again? Say, roll the dice.")
       .getResponse();
   },
 };
