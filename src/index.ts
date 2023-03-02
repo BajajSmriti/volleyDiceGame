@@ -232,18 +232,6 @@ function ErrorHandler(handlerInput: Alexa.HandlerInput, error: Error) {
     .getResponse();
 }
 
-export const handlerList = {
-  CancelOrStopIntentHandler,
-  HelpIntentHandler,
-  HelloIntentHandler,
-  RollDiceIntentHandler,
-  ContinueGameIntentHandler,
-  AddNameToHighScoreIntentHandler,
-  EndGameIntentHandler,
-  TopTenHighScoresIntentHandler,
-  DontAddNameIntentHandler,
-};
-
 export const handler = Alexa.SkillBuilders.custom()
   .addRequestHandlers(
     CancelOrStopIntentHandler,
