@@ -1,0 +1,130 @@
+{
+    "interactionModel": {
+        "languageModel": {
+            "invocationName": "dice game",
+            "intents": [
+                {
+                    "name": "AMAZON.CancelIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.HelpIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.StopIntent",
+                    "samples": []
+                },
+                {
+                    "name": "HelloWorldIntent",
+                    "slots": [],
+                    "samples": [
+                        "hello",
+                        "how are you",
+                        "say hi world",
+                        "say hi",
+                        "hi",
+                        "say hello world",
+                        "say hello"
+                    ]
+                },
+                {
+                    "name": "AMAZON.NavigateHomeIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.FallbackIntent",
+                    "samples": []
+                },
+                {
+                    "name": "RollDiceIntent",
+                    "slots": [],
+                    "samples": [
+                        "throw a die",
+                        "throw a dice",
+                        "Play with dice",
+                        "I want to roll the dice",
+                        "Let's roll the die",
+                        "Let's hit it.",
+                        "Roll the dice"
+                    ]
+                },
+                {
+                    "name": "ContinueGameIntent",
+                    "slots": [],
+                    "samples": [
+                        "cont",
+                        "continue the game",
+                        "continue"
+                    ]
+                },
+                {
+                    "name": "EndGameIntent",
+                    "slots": [],
+                    "samples": [
+                        "end",
+                        "Endgame",
+                        "end game",
+                        "end the game"
+                    ]
+                },
+                {
+                    "name": "AddNameToHighScoreIntent",
+                    "slots": [
+                        {
+                            "name": "name",
+                            "type": "AMAZON.FirstName"
+                        }
+                    ],
+                    "samples": [
+                        "yeah",
+                        "yep",
+                        "yes",
+                        "{name}",
+                        "yes i am {name}",
+                        "my name is {name}",
+                        "yes this is {name}",
+                        "yep my name is {name}",
+                        "sure i am {name}",
+                        "yes my name is {name}",
+                        "put my name in high score {name}",
+                        "add me to high score",
+                        "add my name to high score",
+                        "Add Name To High Score"
+                    ]
+                },
+                {
+                    "name": "DontAddNameIntent",
+                    "slots": [],
+                    "samples": [
+                        "nope",
+                        "not happening",
+                        "nah",
+                        "never",
+                        "no"
+                    ]
+                },
+                {
+                    "name": "TopTenHighScoresIntent",
+                    "slots": [
+                        {
+                            "name": "ten",
+                            "type": "AMAZON.NUMBER"
+                        }
+                    ],
+                    "samples": [
+                        "show me the scoreboard",
+                        "who are in top {ten}",
+                        "high score",
+                        "high score table",
+                        "who got the highest scores",
+                        "who are the winners",
+                        "show me top {ten}",
+                        "I want the top {ten} scorers"
+                    ]
+                }
+            ],
+            "types": []
+        }
+    }
+}
