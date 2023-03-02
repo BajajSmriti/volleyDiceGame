@@ -3,7 +3,14 @@ import { Constants } from "../constants";
 
 const dynamoDB = new DynamoDB.DocumentClient();
 
-async function postUserDetails(userId, userName, score) {
+async function postUserDetails(userId, userName, score, flag = 0) {
+  if (!flag) {
+    // Check username exists only if flag = 0
+    let res = await getUserDetails(userName);
+    if (res.Items[0] && res.Items[0].userName === userName) {
+      return -1;
+    }
+  }
   // Save the user's score and name to the high score list.
   try {
     const result = await dynamoDB
@@ -23,8 +30,27 @@ async function postUserDetails(userId, userName, score) {
   }
 }
 
+async function getUserDetails(userName) {
+  // Save the user's score and name to the high score list.
+  try {
+    const result = await dynamoDB
+      .scan({
+        TableName: Constants.dbname,
+        FilterExpression: "userName = :userName",
+        ExpressionAttributeValues: {
+          ":userName": userName,
+        },
+      })
+      .promise();
+
+    return result;
+  } catch (err) {
+    throw err;
+  }
+}
+
 async function scanDB() {
-  // Fetch the top 10 user's score and name from the high score list.
+  // Full DB Scan
   try {
     const params = {
       TableName: Constants.dbname,

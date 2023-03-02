@@ -37,15 +37,12 @@ const HelloIntentHandler: Alexa.RequestHandler = {
     sessionAttributes.currentScore = 0;
     sessionAttributes.userId = uuidv4();
 
-    return (
-      handlerInput.responseBuilder
-        .speak(
-          "Welcome to my skill! You can say 'roll the dice' to start the game or 'show me the scoreboard' to view the top 10 scores. "
-        )
-        // .reprompt("You can say 'roll the dice' to start the game.")
-        .withShouldEndSession(false)
-        .getResponse()
-    );
+    return handlerInput.responseBuilder
+      .speak(
+        "Welcome to the game! You can say 'roll the dice' to start the game or 'show me the scoreboard' to view the top 10 scores. "
+      )
+      .withShouldEndSession(false)
+      .getResponse();
   },
 };
 
@@ -57,14 +54,22 @@ const RollDiceIntentHandler: Alexa.RequestHandler = {
     const roll = Math.floor(Math.random() * 6) + 1;
     let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
     let score = sessionAttributes.score || 0;
+    let userName = sessionAttributes.userName || null;
     let speechOutput = "";
 
     if (roll === 1) {
       score = 0;
-      speechOutput = "You rolled a 1. Your score has been reset to zero. ";
+
+      speechOutput = "rolled a 1. Your score has been reset to zero. ";
+      speechOutput = userName
+        ? `${userName}, you ${speechOutput}`
+        : `You ${speechOutput}`;
     } else {
       score += roll;
-      speechOutput = `You rolled a ${roll}. `;
+      speechOutput = `rolled a ${roll}. `;
+      speechOutput = userName
+        ? `${userName}, you ${speechOutput}`
+        : `You ${speechOutput}`;
     }
 
     sessionAttributes.score = score;
@@ -72,13 +77,10 @@ const RollDiceIntentHandler: Alexa.RequestHandler = {
 
     speechOutput +=
       "Do you want to continue or end the game? Say 'continue' to roll again or 'end game' to stop playing.";
-    return (
-      handlerInput.responseBuilder
-        .speak(speechOutput)
-        // .reprompt("Say 'continue' to roll again or 'end game' to stop playing.")
-        .withShouldEndSession(false)
-        .getResponse()
-    );
+    return handlerInput.responseBuilder
+      .speak(speechOutput)
+      .withShouldEndSession(false)
+      .getResponse();
   },
 };
 
@@ -98,16 +100,15 @@ const EndGameIntentHandler: Alexa.RequestHandler = {
   handle(handlerInput) {
     let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
     let score = sessionAttributes.score || 0;
+    let userName = sessionAttributes.userName;
+    let speechOutput = userName
+      ? `${userName}, your new final score is ${score}. Do you want to update your score? Say 'yes' to update or 'no' to skip.`
+      : `Your final score is ${score}. Do you want to add your name to the high score list? Say 'yes, my name is [your name].' to add your name to the list or 'no' to skip.`;
 
-    let speechOutput = `Your final score is ${score}. Do you want to add your name to the high score list? Say 'yes, my name is [your name].' to add your name to the list or 'no' to skip.`;
-
-    return (
-      handlerInput.responseBuilder
-        .speak(speechOutput)
-        // .reprompt("Say 'yes' to add your name to the list or 'no' to skip.")
-        .withShouldEndSession(false)
-        .getResponse()
-    );
+    return handlerInput.responseBuilder
+      .speak(speechOutput)
+      .withShouldEndSession(false)
+      .getResponse();
   },
 };
 
@@ -116,9 +117,13 @@ const DontAddNameIntentHandler: Alexa.RequestHandler = {
     return isIntent("DontAddNameIntent")(handlerInput);
   },
   handle(handlerInput) {
+    let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+    sessionAttributes.score = 0;
+    handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
+
     return handlerInput.responseBuilder
       .speak("Thanks for playing, have a wonderful day!")
-      .withShouldEndSession(true)
+      .withShouldEndSession(false)
       .getResponse();
   },
 };
@@ -132,15 +137,45 @@ const AddNameToHighScoreIntentHandler: Alexa.RequestHandler = {
     let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
     let score = sessionAttributes.score || 0;
     let userId = sessionAttributes.userId;
+    let speechOutput;
 
-    // Get the user name from the slots
-    const userName = requestEnvelope.request.intent.slots.name.value;
-    await dbHandler.postUserDetails(userId, userName, score);
-    let speechOutput = `Your score of ${score} has been added to the high score list. Goodbye!`;
+    if (sessionAttributes.userName) {
+      // Check if user is coming again and is already in the high score list
+      let userDetails = await dbHandler.postUserDetails(
+        userId,
+        sessionAttributes.userName,
+        score,
+        1 // setting 1 to force update
+      );
+      sessionAttributes.score = 0;
+      handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
+      speechOutput = `${sessionAttributes.userName}, your score of ${score} has been updated. Goodbye!`;
+    } else {
+      // Get the user name from the slots
+      const userName =
+        requestEnvelope.request.intent.slots.name.value ||
+        sessionAttributes.userName;
+
+      // Post request to DB
+      let userDetails = await dbHandler.postUserDetails(
+        userId,
+        userName,
+        score
+      );
+
+      if (userDetails == -1) {
+        speechOutput = `${userName} username already exists. Please try another one.`;
+      } else {
+        sessionAttributes.userName = userName;
+        sessionAttributes.score = 0;
+        handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
+        speechOutput = `${userName}, your score of ${score} has been added to the high score list. Goodbye!`;
+      }
+    }
 
     return handlerInput.responseBuilder
       .speak(speechOutput)
-      .withShouldEndSession(true)
+      .withShouldEndSession(false)
       .getResponse();
   },
 };
@@ -151,8 +186,9 @@ const TopTenHighScoresIntentHandler: Alexa.RequestHandler = {
   },
   async handle(handlerInput) {
     const response = await dbHandler.scanDB();
-
     const items = response.Items || [];
+    let sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
+    let userName = sessionAttributes.userName || null;
 
     // Sort items by score in descending order
     items.sort((a, b) => (b.score || 0) - (a.score || 0));
@@ -166,12 +202,16 @@ const TopTenHighScoresIntentHandler: Alexa.RequestHandler = {
       speechOutput = "You are the first player to test the game.";
     } else {
       // Build speech output
-      speechOutput = "Here are the top 10 scores:";
+      speechOutput = "are the top 10 scores:";
+      speechOutput = userName
+        ? `${userName}, here ${speechOutput}`
+        : `Here ${speechOutput}`;
+      // Build high score for speech output
       for (let i = 0; i < top10Items.length; i++) {
         const item = top10Items[i];
-        const username = item.userName || "unknown user";
+        const usern = item.userName || "unknown user";
         const score = item.score || 0;
-        speechOutput += ` ${i + 1}. ${username} with a score of ${score}.`;
+        speechOutput += ` Rank ${i + 1}. ${usern} with a score of ${score}.`;
       }
     }
 
@@ -183,16 +223,24 @@ const TopTenHighScoresIntentHandler: Alexa.RequestHandler = {
 };
 
 function ErrorHandler(handlerInput: Alexa.HandlerInput, error: Error) {
+  console.error(error.message);
   return handlerInput.responseBuilder
-    .speak(
-      ` <amazon:emotion name="excited" intensity="high">
-          Abort mission, repeating, abort mission!
-        </amazon:emotion>
-        <sub alias=",">${escapeXmlCharacters(error.message)}</sub>`
-    )
-    .withShouldEndSession(true)
+    .speak("Say that again?")
+    .withShouldEndSession(false)
     .getResponse();
 }
+
+export const handlerList = {
+  CancelOrStopIntentHandler,
+  HelpIntentHandler,
+  HelloIntentHandler,
+  RollDiceIntentHandler,
+  ContinueGameIntentHandler,
+  AddNameToHighScoreIntentHandler,
+  EndGameIntentHandler,
+  TopTenHighScoresIntentHandler,
+  DontAddNameIntentHandler,
+};
 
 export const handler = Alexa.SkillBuilders.custom()
   .addRequestHandlers(
