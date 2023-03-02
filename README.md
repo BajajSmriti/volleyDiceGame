@@ -16,7 +16,8 @@
 
 
 ## Demo
-Check out the demo - 
+Check out the demo here - [demo.mp4](https://github.com/BajajSmriti/volleyDiceGame/blob/master/demo.mp4)
+It shows both the happy and sad paths. I have added session management in the dialog. The session ends in the "no" path and when the user says "bye".
 
 ## Deployment
 The deployment will take a while.
